@@ -1,6 +1,7 @@
 package com.natamus.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
+import com.natamus.collective.check.ShouldLoadCheck;
 import com.natamus.configurableextramobdrops.neoforge.events.NeoForgeMobDropEvent;
 import com.natamus.configurableextramobdrops.util.Reference;
 import net.neoforged.bus.api.IEventBus;
@@ -12,6 +13,10 @@ import net.neoforged.neoforge.common.NeoForge;
 public class ModNeoForge {
 	
 	public ModNeoForge(IEventBus modEventBus) {
+		if (!ShouldLoadCheck.shouldLoad(Reference.MOD_ID)) {
+			return;
+		}
+
 		modEventBus.addListener(this::loadComplete);
 
 		setGlobalConstants();
