@@ -1,6 +1,7 @@
 package com.natamus.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
+import com.natamus.collective.check.ShouldLoadCheck;
 import com.natamus.collective.fabric.callbacks.CollectiveEntityEvents;
 import com.natamus.configurableextramobdrops.cmd.CommandCemd;
 import com.natamus.configurableextramobdrops.events.MobDropEvent;
@@ -16,6 +17,10 @@ public class ModFabric implements ModInitializer {
 	
 	@Override
 	public void onInitialize() {
+		if (!ShouldLoadCheck.shouldLoad(Reference.MOD_ID)) {
+			return;
+		}
+
 		setGlobalConstants();
 		ModCommon.init();
 
