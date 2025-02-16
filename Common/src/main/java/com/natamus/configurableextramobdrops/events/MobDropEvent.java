@@ -1,20 +1,18 @@
 package com.natamus.configurableextramobdrops.events;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.natamus.collective.data.GlobalVariables;
-import com.natamus.collective.functions.ItemFunctions;
 import com.natamus.configurableextramobdrops.util.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MobDropEvent {
@@ -27,46 +25,45 @@ public class MobDropEvent {
 			return;
 		}
 		
-		EntityType<?> entitytype = entity.getType();
-		if (!Util.mobdrops.containsKey(entitytype)) {
+		EntityType<?> entityType = entity.getType();
+		if (!Util.mobdrops.containsKey(entityType)) {
 			return;
 		}
 		
-		CopyOnWriteArrayList<ItemStack> extradrops = Util.mobdrops.get(entitytype);
-		if (extradrops.size() > 0) {
-			BlockPos epos = entity.blockPosition();
+		CopyOnWriteArrayList<ItemStack> extradrops = Util.mobdrops.get(entityType);
+		if (!extradrops.isEmpty()) {
+			BlockPos ePos = entity.blockPosition();
 			
-			for (ItemStack itemstack : extradrops) {
-				ItemStack newstack = itemstack.copy();
+			for (ItemStack extraDropStack : extradrops) {
+				ItemStack newStack = extraDropStack.copy();
 
-				CompoundTag tag;
-				try {
-					tag = TagParser.parseTag(ItemFunctions.getNBTStringFromItemStack(level, newstack));
-				}
-				catch (CommandSyntaxException ex) {
-					continue;
-				}
+				if (newStack.has(DataComponents.CUSTOM_DATA)) {
+					CustomData customData = newStack.get(DataComponents.CUSTOM_DATA);
+					if (customData == null) {
+						continue;
+					}
 
-				if (tag.contains("dropchance")) {
-					double dropchance = tag.getDouble("dropchance");
-					if (dropchance != 1.0) {
-						double chanceroll = GlobalVariables.random.nextDouble();
-						if (chanceroll > dropchance) {
-							continue;
+					CompoundTag compoundTag = customData.copyTag();
+					if (compoundTag.contains("dropChance")) {
+						double dropChance = compoundTag.getDouble("dropChance");
+						if (dropChance != 1.0) {
+							double chanceroll = GlobalVariables.random.nextDouble();
+							if (chanceroll > dropChance) {
+								continue;
+							}
 						}
-					}
-					tag.remove("dropchance");
-					if (tag.size() == 0) {
-						tag.remove("tag");
-					}
 
-					Optional<ItemStack> optionalNewStack = ItemStack.parse(level.registryAccess(), tag);
-					if (optionalNewStack.isPresent()) {
-						newstack = optionalNewStack.get();
+						if (compoundTag.size() == 1) {
+							newStack.remove(DataComponents.CUSTOM_DATA);
+						}
+						else {
+							compoundTag.remove("dropChance");
+							newStack.set(DataComponents.CUSTOM_DATA, CustomData.of(compoundTag));
+						}
 					}
 				}
 				
-				level.addFreshEntity(new ItemEntity(level, epos.getX(), epos.getY()+1, epos.getZ(), newstack.copy()));
+				level.addFreshEntity(new ItemEntity(level, ePos.getX(), ePos.getY()+1, ePos.getZ(), newStack));
 			}
 		}
 	}

@@ -5,23 +5,22 @@ import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.natamus.collective.functions.ItemFunctions;
 import com.natamus.collective.functions.MessageFunctions;
 import com.natamus.configurableextramobdrops.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CommandCemd {
@@ -44,7 +43,7 @@ public class CommandCemd {
 			.executes((command) -> {
 				CommandSourceStack source = command.getSource();
 				
-				ArrayList<String> mobnames = new ArrayList<String>();
+				ArrayList<String> mobnames = new ArrayList<>();
 				for (EntityType<?> et : Util.mobdrops.keySet()) {
 					String lowerregister = BuiltInRegistries.ENTITY_TYPE.getKey(et).toString().toLowerCase();
 					String[] nspl = lowerregister.split(":");
@@ -64,7 +63,7 @@ public class CommandCemd {
 				
 				StringBuilder output = new StringBuilder();
 				for (String mobname : mobnames) {
-					if (!output.toString().equals("")) {
+					if (!output.toString().isEmpty()) {
 						output.append(", ");
 					}
 					
@@ -88,7 +87,6 @@ public class CommandCemd {
 					Util.loadMobConfigFile(source.getLevel());
 				} catch (Exception ex) {
 					MessageFunctions.sendMessage(source, "Something went wrong while reloading the mob drop config file.", ChatFormatting.RED);
-					ex.printStackTrace();
 					return 0;
 				}
 				
@@ -97,9 +95,7 @@ public class CommandCemd {
 			}))
 			.then(Commands.literal("addhand")
 			.then(Commands.argument("entity-name", StringArgumentType.word())
-			.executes((command) -> {
-				return processAddhand(command, 1.0);
-			})))
+			.executes((command) -> processAddhand(command, 1.0))))
 			.then(Commands.literal("addhand")
 			.then(Commands.argument("entity-name", StringArgumentType.word())
 			.then(Commands.argument("drop-chance", DoubleArgumentType.doubleArg())
@@ -152,7 +148,7 @@ public class CommandCemd {
 					return 0;					
 				}
 				
-				Util.mobdrops.put(entitytype, new CopyOnWriteArrayList<ItemStack>());
+				Util.mobdrops.put(entitytype, new CopyOnWriteArrayList<>());
 				
 				try {
 					if (!Util.writeDropsMapToFile(source.getLevel())) {
@@ -160,7 +156,6 @@ public class CommandCemd {
 					}
 				} catch (Exception ex) {
 					MessageFunctions.sendMessage(source, "Something went wrong while writing the new config.", ChatFormatting.RED);
-					ex.printStackTrace();
 				}
 				
 				MessageFunctions.sendMessage(source, "Successfully cleared all drops for the entity '" + entitytype.getDescription().getString() + "'.", ChatFormatting.DARK_GREEN);
@@ -169,7 +164,7 @@ public class CommandCemd {
 		);
 	}
 	
-	private static int processAddhand(CommandContext<CommandSourceStack> command, double dropchance) {
+	private static int processAddhand(CommandContext<CommandSourceStack> command, double dropChance) {
 		CommandSourceStack source = command.getSource();
 		
 		Player player;
@@ -222,24 +217,13 @@ public class CommandCemd {
 
 		Level level = player.level();
 
-		CompoundTag nbt;
-		try {
-			nbt = TagParser.parseTag(ItemFunctions.getNBTStringFromItemStack(level, hand.copy()));
-		}
-		catch (CommandSyntaxException ex) {
-			return 0;
-		}
+		CompoundTag compoundTag = new CompoundTag();
+		compoundTag.putDouble("dropChance", dropChance);
 
-		nbt.putDouble("dropchance", dropchance);
+		ItemStack toAddStack = hand.copy();
+		toAddStack.set(DataComponents.CUSTOM_DATA, CustomData.of(compoundTag));
 
-		Optional<ItemStack> optionalToAdd = ItemStack.parse(level.registryAccess(), nbt);
-		if (optionalToAdd.isEmpty()) {
-			return 0;
-		}
-
-		ItemStack toAdd = optionalToAdd.get();
-
-		Util.mobdrops.get(entitytype).add(toAdd.copy());
+		Util.mobdrops.get(entitytype).add(toAddStack);
 		
 		try {
 			if (!Util.writeDropsMapToFile(level)) {
@@ -247,10 +231,9 @@ public class CommandCemd {
 			}
 		} catch (Exception ex) {
 			MessageFunctions.sendMessage(source, "Something went wrong while writing the new config.", ChatFormatting.RED);
-			ex.printStackTrace();
 		}
 		
-		MessageFunctions.sendMessage(source, "Successfully added '" + toAdd.getCount() + " " + toAdd.getHoverName().getString().toLowerCase() + "' as a drop for the entity '" + entitytype.getDescription().getString() + "' with a drop chance of '" + dropchance + "'.", ChatFormatting.DARK_GREEN);
+		MessageFunctions.sendMessage(source, "Successfully added '" + toAddStack.getCount() + " " + toAddStack.getHoverName().getString().toLowerCase() + "' as a drop for the entity '" + entitytype.getDescription().getString() + "' with a drop chance of '" + dropChance + "'.", ChatFormatting.DARK_GREEN);
 		return 1;
 	}
 	

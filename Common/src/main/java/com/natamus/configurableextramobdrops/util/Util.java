@@ -28,8 +28,8 @@ public class Util {
 	private static final File dir = new File(dirpath);
 	private static final File file = new File(dirpath + File.separator + "mobdropconfig.txt");
 	
-	public static HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>> mobdrops = new HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>>();
-	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<EntityType<?>>(Arrays.asList(EntityType.IRON_GOLEM, EntityType.SNOW_GOLEM, EntityType.VILLAGER));
+	public static HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>> mobdrops = new HashMap<>();
+	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<>(Arrays.asList(EntityType.IRON_GOLEM, EntityType.SNOW_GOLEM, EntityType.VILLAGER));
 
 	private static boolean loadedMobConfigFile = false;
 
@@ -48,11 +48,11 @@ public class Util {
 	}
 
 	public static void loadMobConfigFile(Level level) throws IOException {
-		mobdrops = new HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>>();
+		mobdrops = new HashMap<>();
 		
 		PrintWriter writer = null;
 		if (!dir.isDirectory() || !file.isFile()) {
-			dir.mkdirs();
+			boolean ignored = dir.mkdirs();
 			writer = new PrintWriter(dirpath + File.separator + "mobdropconfig.txt", StandardCharsets.UTF_8);
 		}
 		else {
@@ -85,7 +85,7 @@ public class Util {
 					continue;
 				}
 				
-				CopyOnWriteArrayList<ItemStack> thedrops = new CopyOnWriteArrayList<ItemStack>(); 
+				CopyOnWriteArrayList<ItemStack> thedrops = new CopyOnWriteArrayList<>();
 				if (itemstring.length() > 3) {
 					for (String itemdata : itemstring.split(StringFunctions.escapeSpecialRegexChars("|||"))) {
 						ItemStack itemstack = null;
@@ -119,7 +119,7 @@ public class Util {
 				if (!classification.equals(MobCategory.MISC) || specialmiscmobs.contains(entitytype)) {
 					writer.println("'" + rl + "'" + " : '',");
 					
-					mobdrops.put(entitytype, new CopyOnWriteArrayList<ItemStack>());
+					mobdrops.put(entitytype, new CopyOnWriteArrayList<>());
 				}
 			}
 			
@@ -129,7 +129,7 @@ public class Util {
 	
 	public static boolean writeDropsMapToFile(Level level) throws IOException {
 		if (!dir.isDirectory() || !file.isFile()) {
-			dir.mkdirs();
+			boolean ignored = dir.mkdirs();
 		}
 		
 		PrintWriter writer = new PrintWriter(dirpath + File.separator + "mobdropconfig.txt", StandardCharsets.UTF_8);
@@ -146,9 +146,9 @@ public class Util {
 				StringBuilder itemdata = new StringBuilder();
 				if (mobdrops.containsKey(entitytype)) {
 					CopyOnWriteArrayList<ItemStack> drops = mobdrops.get(entitytype);
-					if (drops.size() > 0) {
+					if (!drops.isEmpty()) {
 						for (ItemStack drop : drops) {
-							if (!itemdata.toString().equals("")) {
+							if (!itemdata.toString().isEmpty()) {
 								itemdata.append("|||");
 							}
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "configurableextramobdrops",
-  "version": "3.5",
+  "version": "3.6",
 
   "name": "Configurable Extra Mob Drops",
   "description": "Add extra drops to any (modded) mob entity via commands and a config file.",
