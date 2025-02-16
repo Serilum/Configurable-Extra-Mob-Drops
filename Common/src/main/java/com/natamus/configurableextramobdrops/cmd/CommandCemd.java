@@ -5,23 +5,22 @@ import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.natamus.collective.functions.ItemFunctions;
 import com.natamus.collective.functions.MessageFunctions;
 import com.natamus.configurableextramobdrops.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CommandCemd {
@@ -29,50 +28,50 @@ public class CommandCemd {
 		dispatcher.register(Commands.literal("cemd").requires((iCommandSender) -> iCommandSender.hasPermission(2))
 			.executes((command) -> {
 				CommandSourceStack source = command.getSource();
-				
+
 				showUsage(source);
 				return 1;
 			})
 			.then(Commands.literal("usage")
 			.executes((command) -> {
 				CommandSourceStack source = command.getSource();
-				
+
 				showUsage(source);
 				return 1;
 			}))
 			.then(Commands.literal("list")
 			.executes((command) -> {
 				CommandSourceStack source = command.getSource();
-				
-				ArrayList<String> mobnames = new ArrayList<String>();
+
+				ArrayList<String> mobnames = new ArrayList<>();
 				for (EntityType<?> et : Util.mobdrops.keySet()) {
 					String lowerregister = BuiltInRegistries.ENTITY_TYPE.getKey(et).toString().toLowerCase();
 					String[] nspl = lowerregister.split(":");
 					if (nspl.length < 2) {
 						continue;
 					}
-					
+
 					String after = nspl[1];
 					if (!nspl[0].equalsIgnoreCase("minecraft")) {
 						after = lowerregister.replace(":", "-");
 					}
-					
+
 					mobnames.add(after);
 				}
-				
+
 				Collections.sort(mobnames);
-				
+
 				StringBuilder output = new StringBuilder();
 				for (String mobname : mobnames) {
-					if (!output.toString().equals("")) {
+					if (!output.toString().isEmpty()) {
 						output.append(", ");
 					}
-					
+
 					output.append(mobname);
 				}
-				
+
 				output.append(".");
-				
+
 				MessageFunctions.sendMessage(source, "Available entity names:", ChatFormatting.DARK_GREEN, true);
 				MessageFunctions.sendMessage(source, output.toString(), ChatFormatting.YELLOW);
 				MessageFunctions.sendMessage(source, "To add a drop: /cemd addhand <entity-name>", ChatFormatting.DARK_GRAY);
@@ -83,35 +82,32 @@ public class CommandCemd {
 			.then(Commands.literal("reload")
 			.executes((command) -> {
 				CommandSourceStack source = command.getSource();
-				
+
 				try {
 					Util.loadMobConfigFile(source.getLevel());
 				} catch (Exception ex) {
 					MessageFunctions.sendMessage(source, "Something went wrong while reloading the mob drop config file.", ChatFormatting.RED);
-					ex.printStackTrace();
 					return 0;
 				}
-				
+
 				MessageFunctions.sendMessage(source, "Successfully loaded the mob drop config file.", ChatFormatting.DARK_GREEN);
 				return 1;
 			}))
 			.then(Commands.literal("addhand")
 			.then(Commands.argument("entity-name", StringArgumentType.word())
-			.executes((command) -> {
-				return processAddhand(command, 1.0);
-			})))
+			.executes((command) -> processAddhand(command, 1.0))))
 			.then(Commands.literal("addhand")
 			.then(Commands.argument("entity-name", StringArgumentType.word())
 			.then(Commands.argument("drop-chance", DoubleArgumentType.doubleArg())
 			.executes((command) -> {
 				CommandSourceStack source = command.getSource();
-				
+
 				double chance = DoubleArgumentType.getDouble(command, "drop-chance");
 				if (chance < 0 || chance > 1.0) {
 					MessageFunctions.sendMessage(source, "The chance has to be in between 0 and 1.0.", ChatFormatting.RED);
 					return 0;
 				}
-				
+
 				return processAddhand(command, chance);
 			}))))
 			.then(Commands.literal("cleardrops")
@@ -121,13 +117,13 @@ public class CommandCemd {
 
 				String entityname = StringArgumentType.getString(command, "entity-name").toLowerCase().trim();
 				EntityType<?> entitytype = null;
-				
+
 				for (EntityType<?> et : Util.mobdrops.keySet()) {
 					String registrystring = BuiltInRegistries.ENTITY_TYPE.getKey(et).toString();
 					if (!registrystring.contains(":")) {
 						continue;
 					}
-					
+
 					if (entityname.contains("-")) {
 						if (registrystring.equalsIgnoreCase(entityname.replace("-", ":"))) {
 							entitytype = et;
@@ -139,39 +135,38 @@ public class CommandCemd {
 						break;
 					}
 				}
-				
+
 				if (entitytype == null) {
 					MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "'.", ChatFormatting.RED);
 					showList(source);
 					return 0;
 				}
-				
+
 				if (!Util.mobdrops.containsKey(entitytype)) {
 					MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "' in the drop hashmap.", ChatFormatting.RED);
 					showList(source);
-					return 0;					
+					return 0;
 				}
-				
-				Util.mobdrops.put(entitytype, new CopyOnWriteArrayList<ItemStack>());
-				
+
+				Util.mobdrops.put(entitytype, new CopyOnWriteArrayList<>());
+
 				try {
 					if (!Util.writeDropsMapToFile(source.getLevel())) {
 						MessageFunctions.sendMessage(source, "!Something went wrong while writing the new config.", ChatFormatting.RED);
 					}
 				} catch (Exception ex) {
 					MessageFunctions.sendMessage(source, "Something went wrong while writing the new config.", ChatFormatting.RED);
-					ex.printStackTrace();
 				}
-				
+
 				MessageFunctions.sendMessage(source, "Successfully cleared all drops for the entity '" + entitytype.getDescription().getString() + "'.", ChatFormatting.DARK_GREEN);
 				return 1;
 			})))
 		);
 	}
-	
-	private static int processAddhand(CommandContext<CommandSourceStack> command, double dropchance) {
+
+	private static int processAddhand(CommandContext<CommandSourceStack> command, double dropChance) {
 		CommandSourceStack source = command.getSource();
-		
+
 		Player player;
 		try {
 			player = source.getPlayerOrException();
@@ -180,16 +175,16 @@ public class CommandCemd {
 			MessageFunctions.sendMessage(source, "This command can only be executed as a player in-game.", ChatFormatting.RED);
 			return 1;
 		}
-		
+
 		String entityname = StringArgumentType.getString(command, "entity-name").toLowerCase().trim();
 		EntityType<?> entitytype = null;
-		
+
 		for (EntityType<?> et : Util.mobdrops.keySet()) {
 			String registrystring = BuiltInRegistries.ENTITY_TYPE.getKey(et).toString();
 			if (!registrystring.contains(":")) {
 				continue;
 			}
-			
+
 			if (entityname.contains("-")) {
 				if (registrystring.equalsIgnoreCase(entityname.replace("-", ":"))) {
 					entitytype = et;
@@ -201,19 +196,19 @@ public class CommandCemd {
 				break;
 			}
 		}
-		
+
 		if (entitytype == null) {
 			MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "'.", ChatFormatting.RED);
 			showList(source);
 			return 0;
 		}
-		
+
 		if (!Util.mobdrops.containsKey(entitytype)) {
 			MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "' in the drop hashmap.", ChatFormatting.RED);
 			showList(source);
-			return 0;					
+			return 0;
 		}
-		
+
 		ItemStack hand = player.getMainHandItem();
 		if (hand.isEmpty()) {
 			MessageFunctions.sendMessage(source, "Your hand is empty! Unable to add drop.", ChatFormatting.RED);
@@ -222,35 +217,23 @@ public class CommandCemd {
 
 		Level level = player.level();
 
-		CompoundTag nbt;
-		try {
-			nbt = TagParser.parseTag(ItemFunctions.getNBTStringFromItemStack(level, hand.copy()));
-		}
-		catch (CommandSyntaxException ex) {
-			return 0;
-		}
+		CompoundTag compoundTag = new CompoundTag();
+		compoundTag.putDouble("dropChance", dropChance);
 
-		nbt.putDouble("dropchance", dropchance);
+		ItemStack toAddStack = hand.copy();
+		toAddStack.set(DataComponents.CUSTOM_DATA, CustomData.of(compoundTag));
 
-		Optional<ItemStack> optionalToAdd = ItemStack.parse(level.registryAccess(), nbt);
-		if (optionalToAdd.isEmpty()) {
-			return 0;
-		}
+		Util.mobdrops.get(entitytype).add(toAddStack);
 
-		ItemStack toAdd = optionalToAdd.get();
-
-		Util.mobdrops.get(entitytype).add(toAdd.copy());
-		
 		try {
 			if (!Util.writeDropsMapToFile(level)) {
 				MessageFunctions.sendMessage(source, "!Something went wrong while writing the new config.", ChatFormatting.RED);
 			}
 		} catch (Exception ex) {
 			MessageFunctions.sendMessage(source, "Something went wrong while writing the new config.", ChatFormatting.RED);
-			ex.printStackTrace();
 		}
-		
-		MessageFunctions.sendMessage(source, "Successfully added '" + toAdd.getCount() + " " + toAdd.getHoverName().getString().toLowerCase() + "' as a drop for the entity '" + entitytype.getDescription().getString() + "' with a drop chance of '" + dropchance + "'.", ChatFormatting.DARK_GREEN);
+
+		MessageFunctions.sendMessage(source, "Successfully added '" + toAddStack.getCount() + " " + toAddStack.getHoverName().getString().toLowerCase() + "' as a drop for the entity '" + entitytype.getDescription().getString() + "' with a drop chance of '" + dropChance + "'.", ChatFormatting.DARK_GREEN);
 		return 1;
 	}
 	

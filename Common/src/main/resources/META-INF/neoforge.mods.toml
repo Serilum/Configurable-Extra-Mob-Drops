@@ -6,7 +6,7 @@ logoFile="icon.png"
 
 [[mods]]
 modId="configurableextramobdrops"
-version="3.5"
+version="3.6"
 displayName="Configurable Extra Mob Drops"
 displayURL="https://serilum.com/mod/configurable-extra-mob-drops"
 authors="Rick South"

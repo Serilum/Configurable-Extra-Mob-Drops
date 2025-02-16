@@ -26,9 +26,9 @@ public class Util {
 	private static final String dirpath = DataFunctions.getConfigDirectory() + File.separator + "configurableextramobdrops";
 	private static final File dir = new File(dirpath);
 	private static final File file = new File(dirpath + File.separator + "mobdropconfig.txt");
-	
-	public static HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>> mobdrops = new HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>>();
-	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<EntityType<?>>(Arrays.asList(EntityType.IRON_GOLEM, EntityType.SNOW_GOLEM, EntityType.VILLAGER));
+
+	public static HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>> mobdrops = new HashMap<>();
+	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<>(Arrays.asList(EntityType.IRON_GOLEM, EntityType.SNOW_GOLEM, EntityType.VILLAGER));
 
 	private static boolean loadedMobConfigFile = false;
 
@@ -47,11 +47,11 @@ public class Util {
 	}
 
 	public static void loadMobConfigFile(Level level) throws IOException {
-		mobdrops = new HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>>();
-		
+		mobdrops = new HashMap<>();
+
 		PrintWriter writer = null;
 		if (!dir.isDirectory() || !file.isFile()) {
-			dir.mkdirs();
+			boolean ignored = dir.mkdirs();
 			writer = new PrintWriter(dirpath + File.separator + "mobdropconfig.txt", StandardCharsets.UTF_8);
 		}
 		else {
@@ -61,30 +61,26 @@ public class Util {
 					line = line.trim();
 					line = line.substring(0, line.length() - 1).trim();
 				}
-				
+
 				if (line.length() < 5) {
 					continue;
 				}
-				
+
 				if (!line.contains("' : '")) {
 					continue;
 				}
-				
+
 				String[] linespl = line.split("' : '");
 				if (linespl.length < 2) {
 					continue;
 				}
-				
+
 				String entityrl = linespl[0].substring(1).trim();
 				String itemstring = linespl[1].trim();
 				itemstring = itemstring.substring(0, itemstring.length() - 1).trim();
-				
+
 				EntityType<?> entitytype = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(entityrl));
-				if (entitytype == null) {
-					continue;
-				}
-				
-				CopyOnWriteArrayList<ItemStack> thedrops = new CopyOnWriteArrayList<ItemStack>(); 
+				CopyOnWriteArrayList<ItemStack> thedrops = new CopyOnWriteArrayList<>();
 				if (itemstring.length() > 3) {
 					for (String itemdata : itemstring.split(StringFunctions.escapeSpecialRegexChars("|||"))) {
 						ItemStack itemstack = null;
@@ -95,39 +91,39 @@ public class Util {
 								itemstack = optionalItemStack.get();
 							}
 						} catch (CommandSyntaxException ignored) { }
-						
+
 						if (itemstack != null) {
 							thedrops.add(itemstack.copy());
 						}
 					}
 				}
-				
+
 				mobdrops.put(entitytype, thedrops);
 			}
 		}
-		
+
 		if (writer != null) {
 			for (ResourceLocation rl : BuiltInRegistries.ENTITY_TYPE.keySet()) {
 				EntityType<?> entitytype = BuiltInRegistries.ENTITY_TYPE.get(rl);
 				MobCategory classification = entitytype.getCategory();
 				if (!classification.equals(MobCategory.MISC) || specialmiscmobs.contains(entitytype)) {
-					writer.println("'" + rl.toString() + "'" + " : '',");
-					
-					mobdrops.put(entitytype, new CopyOnWriteArrayList<ItemStack>());
+					writer.println("'" + rl + "'" + " : '',");
+
+					mobdrops.put(entitytype, new CopyOnWriteArrayList<>());
 				}
 			}
-			
+
 			writer.close();
 		}
 	}
-	
+
 	public static boolean writeDropsMapToFile(Level level) throws IOException {
 		if (!dir.isDirectory() || !file.isFile()) {
-			dir.mkdirs();
+			boolean ignored = dir.mkdirs();
 		}
-		
+
 		PrintWriter writer = new PrintWriter(dirpath + File.separator + "mobdropconfig.txt", StandardCharsets.UTF_8);
-		
+
 		for (ResourceLocation rl : BuiltInRegistries.ENTITY_TYPE.keySet()) {
 			EntityType<?> entitytype = BuiltInRegistries.ENTITY_TYPE.get(rl);
 			MobCategory classification = entitytype.getCategory();
@@ -135,20 +131,20 @@ public class Util {
 				StringBuilder itemdata = new StringBuilder();
 				if (mobdrops.containsKey(entitytype)) {
 					CopyOnWriteArrayList<ItemStack> drops = mobdrops.get(entitytype);
-					if (drops.size() > 0) {
+					if (!drops.isEmpty()) {
 						for (ItemStack drop : drops) {
-							if (!itemdata.toString().equals("")) {
+							if (!itemdata.toString().isEmpty()) {
 								itemdata.append("|||");
 							}
 
 							String nbtstring = ItemFunctions.getNBTStringFromItemStack(level, drop);
-							
+
 							itemdata.append(nbtstring);
 						}
 					}
 				}
-				
-				writer.println("'" + rl.toString() + "'" + " : '" + itemdata + "',");
+
+				writer.println("'" + rl + "'" + " : '" + itemdata + "',");
 			}
 		}
 		
