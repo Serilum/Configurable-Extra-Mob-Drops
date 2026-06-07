@@ -1,4 +1,5 @@
 package com.natamus.configurableextramobdrops.cmd;
+import com.natamus.configurableextramobdrops.util.Reference;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -73,10 +74,10 @@ public class CommandCemd {
 				
 				output.append(".");
 				
-				MessageFunctions.sendMessage(source, "Available entity names:", ChatFormatting.DARK_GREEN, true);
+				MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.availableentitynames", true, ChatFormatting.DARK_GREEN);
 				MessageFunctions.sendMessage(source, output.toString(), ChatFormatting.YELLOW);
-				MessageFunctions.sendMessage(source, "To add a drop: /cemd addhand <entity-name>", ChatFormatting.DARK_GRAY);
-				MessageFunctions.sendMessage(source, "Note: for modded entities use - not :", ChatFormatting.RED);
+				MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.adddropcemd", ChatFormatting.DARK_GRAY);
+				MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.notemoddedentities", ChatFormatting.RED);
 				MessageFunctions.sendMessage(source, "", ChatFormatting.RED);
 				return 1;
 			}))
@@ -87,11 +88,11 @@ public class CommandCemd {
 				try {
 					Util.loadMobConfigFile(source.getLevel());
 				} catch (Exception ex) {
-					MessageFunctions.sendMessage(source, "Something went wrong while reloading the mob drop config file.", ChatFormatting.RED);
+					MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.somethingwentwrongwhilereloading", ChatFormatting.RED);
 					return 0;
 				}
 				
-				MessageFunctions.sendMessage(source, "Successfully loaded the mob drop config file.", ChatFormatting.DARK_GREEN);
+				MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.successfullyloadedmob", ChatFormatting.DARK_GREEN);
 				return 1;
 			}))
 			.then(Commands.literal("addhand")
@@ -105,7 +106,7 @@ public class CommandCemd {
 				
 				double chance = DoubleArgumentType.getDouble(command, "drop-chance");
 				if (chance < 0 || chance > 1.0) {
-					MessageFunctions.sendMessage(source, "The chance has to be in between 0 and 1.0.", ChatFormatting.RED);
+					MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.chancebetween0", ChatFormatting.RED);
 					return 0;
 				}
 				
@@ -138,13 +139,13 @@ public class CommandCemd {
 				}
 				
 				if (entitytype == null) {
-					MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "'.", ChatFormatting.RED);
+					MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.unablefindentityname", ChatFormatting.RED, entityname);
 					showList(source);
 					return 0;
 				}
 				
 				if (!Util.mobdrops.containsKey(entitytype)) {
-					MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "' in the drop hashmap.", ChatFormatting.RED);
+					MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.unablefindentitynamedrop", ChatFormatting.RED, entityname);
 					showList(source);
 					return 0;					
 				}
@@ -153,13 +154,13 @@ public class CommandCemd {
 				
 				try {
 					if (!Util.writeDropsMapToFile(source.getLevel())) {
-						MessageFunctions.sendMessage(source, "!Something went wrong while writing the new config.", ChatFormatting.RED);
+						MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.somethingwentwrongwhile", ChatFormatting.RED);
 					}
 				} catch (Exception ex) {
-					MessageFunctions.sendMessage(source, "Something went wrong while writing the new config.", ChatFormatting.RED);
+					MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.somethingwentwrongwhilewriting", ChatFormatting.RED);
 				}
 				
-				MessageFunctions.sendMessage(source, "Successfully cleared all drops for the entity '" + entitytype.getDescription().getString() + "'.", ChatFormatting.DARK_GREEN);
+				MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.successfullycleareddrops", ChatFormatting.DARK_GREEN, entitytype.getDescription().getString());
 				return 1;
 			})))
 		);
@@ -173,7 +174,7 @@ public class CommandCemd {
 			player = source.getPlayerOrException();
 		}
 		catch (CommandSyntaxException ex) {
-			MessageFunctions.sendMessage(source, "This command can only be executed as a player in-game.", ChatFormatting.RED);
+			MessageFunctions.sendTranslatableMessage(source, "collective.shared.message.playeronly", ChatFormatting.RED);
 			return 1;
 		}
 		
@@ -199,20 +200,20 @@ public class CommandCemd {
 		}
 		
 		if (entitytype == null) {
-			MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "'.", ChatFormatting.RED);
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.unablefindentityname", ChatFormatting.RED, entityname);
 			showList(source);
 			return 0;
 		}
 		
 		if (!Util.mobdrops.containsKey(entitytype)) {
-			MessageFunctions.sendMessage(source, "Unable to find an entity with the name '" + entityname + "' in the drop hashmap.", ChatFormatting.RED);
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.unablefindentitynamedrop", ChatFormatting.RED, entityname);
 			showList(source);
 			return 0;					
 		}
 		
 		ItemStack hand = player.getMainHandItem();
 		if (hand.isEmpty()) {
-			MessageFunctions.sendMessage(source, "Your hand is empty! Unable to add drop.", ChatFormatting.RED);
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.handemptyunable", ChatFormatting.RED);
 			return 0;
 		}
 
@@ -228,34 +229,34 @@ public class CommandCemd {
 		
 		try {
 			if (!Util.writeDropsMapToFile(level)) {
-				MessageFunctions.sendMessage(source, "!Something went wrong while writing the new config.", ChatFormatting.RED);
+				MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.somethingwentwrongwhile", ChatFormatting.RED);
 			}
 		} catch (Exception ex) {
-			MessageFunctions.sendMessage(source, "Something went wrong while writing the new config.", ChatFormatting.RED);
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.somethingwentwrongwhilewriting", ChatFormatting.RED);
 		}
 		
-		MessageFunctions.sendMessage(source, "Successfully added '" + toAddStack.getCount() + " " + toAddStack.getHoverName().getString().toLowerCase() + "' as a drop for the entity '" + entitytype.getDescription().getString() + "' with a drop chance of '" + dropChance + "'.", ChatFormatting.DARK_GREEN);
+		MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.successfullyaddeddrop", ChatFormatting.DARK_GREEN, toAddStack.getCount(), toAddStack.getHoverName().getString().toLowerCase(), entitytype.getDescription().getString(), dropChance);
 		return 1;
 	}
 	
 	private static void showUsage(CommandSourceStack source) {
-		MessageFunctions.sendMessage(source, "Configurable Extra Mob Drops Usage:", ChatFormatting.DARK_GREEN, true);
+		MessageFunctions.sendTranslatableMessage(source, "collective.shared.message.usage", true, ChatFormatting.DARK_GREEN, Reference.NAME);
 		MessageFunctions.sendMessage(source, " /cemd usage", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Show this message.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.shared.message.showmessage", ChatFormatting.DARK_GRAY);
 		MessageFunctions.sendMessage(source, " /cemd list", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Lists available entities to add drops to.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.listsavailableentities", ChatFormatting.DARK_GRAY);
 		MessageFunctions.sendMessage(source, " /cemd reload", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Reloads the config file.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.shared.message.reloadsconfigfile", ChatFormatting.DARK_GRAY);
 		MessageFunctions.sendMessage(source, " /cemd addhand <entity-name>", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Add your hand to the entity's drops with a 100% chance.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.addhandentitydrops", ChatFormatting.DARK_GRAY);
 		MessageFunctions.sendMessage(source, " /cemd addhand <entity-name> <drop-chance>", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Add your hand to the entity's drops with drop-chance in between 0 and 1.0.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.addhandentitydropsdrop", ChatFormatting.DARK_GRAY);
 		MessageFunctions.sendMessage(source, " /cemd cleardrops <entity-name>", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Clears all drops of the specified entity.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.clearsdropsspecified", ChatFormatting.DARK_GRAY);
 	}
 	
 	private static void showList(CommandSourceStack source) {
 		MessageFunctions.sendMessage(source, " /cemd list", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendMessage(source, "  Lists available entities to add drops to.", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.listsavailableentities", ChatFormatting.DARK_GRAY);
 	}
 }
