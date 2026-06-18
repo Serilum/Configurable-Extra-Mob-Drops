@@ -11,6 +11,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -30,7 +31,7 @@ public class Util {
 	private static final File file = new File(dirpath + File.separator + "mobdropconfig.txt");
 	
 	public static HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>> mobdrops = new HashMap<>();
-	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<>(Arrays.asList(EntityType.IRON_GOLEM, EntityType.SNOW_GOLEM, EntityType.VILLAGER));
+	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<>(Arrays.asList(EntityTypes.IRON_GOLEM, EntityTypes.SNOW_GOLEM, EntityTypes.VILLAGER));
 
 	private static boolean loadedMobConfigFile = false;
 
