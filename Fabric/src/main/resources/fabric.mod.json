@@ -1,35 +1,35 @@
 {
   "schemaVersion": 1,
   "id": "configurableextramobdrops",
-  "version": "3.7",
+  "version": "3.8",
 
   "name": "Configurable Extra Mob Drops",
   "description": "Add extra drops to any (modded) mob entity via commands and a config file.",
-  "authors": [ "Rick South" ],
+  "authors": [ "Serilum" ],
   "contact": {
     "homepage": "https://serilum.com/mod/configurable-extra-mob-drops",
     "sources": "https://github.com/Serilum/Configurable-Extra-Mob-Drops",
     "issues": "https://github.com/Serilum/.issue-tracker/labels/Mod:%20Configurable%20Extra%20Mob%20Drops"
   },
 
-  "license": "All Right Reserved",
+  "license": "All Rights Reserved",
   "icon": "icon.png",
 
   "environment": "*",
-  "entrypoints": { "main": [ "com.natamus.configurableextramobdrops.ModFabric" ] },
+  "entrypoints": { "main": [ "com.serilum.configurableextramobdrops.ModFabric" ] },
 
   "depends": {
     "fabricloader": ">=0.15.0",
     "fabric": "*",
     "minecraft": ">=1.21",
     "java": ">=21",
-    "collective": ">=8.25"
+    "collective": ">=8.40"
   },
 
   "custom": {
     "modmenu": {
       "links": {
-        "Donate <3" : "https://ricksouth.com/donate"
+        "Donate <3" : "https://serilum.com/donate"
       }
     }
   },
@@ -38,14 +38,14 @@
 	  " ",
 	  "Thank you very much to my Membership sponsors for supporting the development of this mod!",
 	  " ",
-	  "If you would like to contribute too, check out https://serilum.com/donate.",
+	  "If you would like to contribute too, check out https://serilum.com/donate",
 	  " ",
 	  "Membership sponsors:",
 	  " Andrean Olgo",
+	  " AnyankaT",
 	  " aternosorg",
 	  " Cherriesaurus",
 	  " Linda Jansen",
-	  " Michelle Smith",
 	  " MWS",
 	  " Tyler Behl"
   ]

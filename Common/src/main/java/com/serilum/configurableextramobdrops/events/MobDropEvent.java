@@ -1,7 +1,7 @@
-package com.natamus.configurableextramobdrops.events;
+package com.serilum.configurableextramobdrops.events;
 
 import com.natamus.collective.data.GlobalVariables;
-import com.natamus.configurableextramobdrops.util.Util;
+import com.serilum.configurableextramobdrops.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;

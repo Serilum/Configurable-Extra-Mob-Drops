@@ -1,9 +1,9 @@
-package com.natamus.configurableextramobdrops;
+package com.serilum.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
 import com.natamus.collective.check.ShouldLoadCheck;
-import com.natamus.configurableextramobdrops.forge.events.ForgeMobDropEvent;
-import com.natamus.configurableextramobdrops.util.Reference;
+import com.serilum.configurableextramobdrops.forge.events.ForgeMobDropEvent;
+import com.serilum.configurableextramobdrops.util.Reference;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -28,7 +28,7 @@ public class ModForge {
 	}
 
 	private void loadComplete(final FMLLoadCompleteEvent event) {
-    	MinecraftForge.EVENT_BUS.register(ForgeMobDropEvent.class);
+		MinecraftForge.EVENT_BUS.register(ForgeMobDropEvent.class);
 	}
 
 	private static void setGlobalConstants() {

@@ -1,11 +1,11 @@
-package com.natamus.configurableextramobdrops;
+package com.serilum.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
 import com.natamus.collective.check.ShouldLoadCheck;
 import com.natamus.collective.fabric.callbacks.CollectiveEntityEvents;
-import com.natamus.configurableextramobdrops.cmd.CommandCemd;
-import com.natamus.configurableextramobdrops.events.MobDropEvent;
-import com.natamus.configurableextramobdrops.util.Reference;
+import com.serilum.configurableextramobdrops.cmd.CommandCemd;
+import com.serilum.configurableextramobdrops.events.MobDropEvent;
+import com.serilum.configurableextramobdrops.util.Reference;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
