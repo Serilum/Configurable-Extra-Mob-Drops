@@ -1,9 +1,9 @@
-package com.natamus.configurableextramobdrops;
+package com.serilum.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
 import com.natamus.collective.check.ShouldLoadCheck;
-import com.natamus.configurableextramobdrops.neoforge.events.NeoForgeMobDropEvent;
-import com.natamus.configurableextramobdrops.util.Reference;
+import com.serilum.configurableextramobdrops.neoforge.events.NeoForgeMobDropEvent;
+import com.serilum.configurableextramobdrops.util.Reference;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
