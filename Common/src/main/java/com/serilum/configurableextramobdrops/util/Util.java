@@ -1,4 +1,4 @@
-package com.natamus.configurableextramobdrops.util;
+package com.serilum.configurableextramobdrops.util;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.natamus.collective.functions.DataFunctions;
