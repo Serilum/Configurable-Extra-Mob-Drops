@@ -1,9 +1,9 @@
-package com.natamus.configurableextramobdrops.events;
+package com.serilum.configurableextramobdrops.events;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.natamus.collective.data.GlobalVariables;
-import com.natamus.configurableextramobdrops.util.Util;
+import com.serilum.configurableextramobdrops.util.Util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
