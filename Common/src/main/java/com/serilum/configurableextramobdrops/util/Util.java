@@ -1,4 +1,4 @@
-package com.natamus.configurableextramobdrops.util;
+package com.serilum.configurableextramobdrops.util;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.natamus.collective.functions.DataFunctions;
@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.ItemStack;

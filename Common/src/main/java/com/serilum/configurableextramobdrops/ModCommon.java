@@ -1,4 +1,4 @@
-package com.natamus.configurableextramobdrops;
+package com.serilum.configurableextramobdrops;
 
 
 public class ModCommon {

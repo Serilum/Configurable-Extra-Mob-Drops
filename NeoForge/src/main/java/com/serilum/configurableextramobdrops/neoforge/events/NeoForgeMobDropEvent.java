@@ -1,8 +1,8 @@
-package com.natamus.configurableextramobdrops.neoforge.events;
+package com.serilum.configurableextramobdrops.neoforge.events;
 
 import com.natamus.collective.functions.WorldFunctions;
-import com.natamus.configurableextramobdrops.cmd.CommandCemd;
-import com.natamus.configurableextramobdrops.events.MobDropEvent;
+import com.serilum.configurableextramobdrops.cmd.CommandCemd;
+import com.serilum.configurableextramobdrops.events.MobDropEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;

@@ -1,5 +1,5 @@
-package com.natamus.configurableextramobdrops.cmd;
-import com.natamus.configurableextramobdrops.util.Reference;
+package com.serilum.configurableextramobdrops.cmd;
+import com.serilum.configurableextramobdrops.util.Reference;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -7,7 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.natamus.collective.functions.MessageFunctions;
-import com.natamus.configurableextramobdrops.util.Util;
+import com.serilum.configurableextramobdrops.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

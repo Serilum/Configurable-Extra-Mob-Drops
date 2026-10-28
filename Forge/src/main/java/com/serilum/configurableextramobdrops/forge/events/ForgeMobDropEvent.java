@@ -1,8 +1,8 @@
-package com.natamus.configurableextramobdrops.forge.events;
+package com.serilum.configurableextramobdrops.forge.events;
 
 import com.natamus.collective.functions.WorldFunctions;
-import com.natamus.configurableextramobdrops.cmd.CommandCemd;
-import com.natamus.configurableextramobdrops.events.MobDropEvent;
+import com.serilum.configurableextramobdrops.cmd.CommandCemd;
+import com.serilum.configurableextramobdrops.events.MobDropEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -29,10 +29,10 @@ public class ForgeMobDropEvent {
 		MobDropEvent.onWorldLoad((ServerLevel)level);
 	}
 
-    @SubscribeEvent
-    public static void registerCommands(RegisterCommandsEvent e) {
-    	CommandCemd.register(e.getDispatcher());
-    }
+	@SubscribeEvent
+	public static void registerCommands(RegisterCommandsEvent e) {
+		CommandCemd.register(e.getDispatcher());
+	}
 
 	@SubscribeEvent
 	public static void mobItemDrop(LivingDropsEvent e) {

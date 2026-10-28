@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.natamus.configurableextramobdrops.mixin",
+  "package": "com.serilum.configurableextramobdrops.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
 
