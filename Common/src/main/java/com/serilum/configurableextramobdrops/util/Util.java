@@ -1,119 +1,267 @@
 package com.serilum.configurableextramobdrops.util;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.natamus.collective.data.GlobalVariables;
 import com.natamus.collective.functions.DataFunctions;
 import com.natamus.collective.functions.StringFunctions;
+import com.serilum.configurableextramobdrops.data.Constants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Util {
 	private static final String dirpath = DataFunctions.getConfigDirectory() + File.separator + "configurableextramobdrops";
 	private static final File dir = new File(dirpath);
 	private static final File file = new File(dirpath + File.separator + "mobdropconfig.txt");
-	
+
 	public static HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>> mobdrops = new HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>>();
 	private static final List<EntityType<?>> specialmiscmobs = new ArrayList<EntityType<?>>(Arrays.asList(EntityType.IRON_GOLEM, EntityType.SNOW_GOLEM, EntityType.VILLAGER));
-	
-	public static void loadMobConfigFile() throws IOException {
-		mobdrops = new HashMap<EntityType<?>, CopyOnWriteArrayList<ItemStack>>();
-		
-		PrintWriter writer = null;
-		if (!dir.isDirectory() || !file.isFile()) {
-			dir.mkdirs();
-			writer = new PrintWriter(dirpath + File.separator + "mobdropconfig.txt", StandardCharsets.UTF_8);
+	private static final List<String> dropSettingKeys = Arrays.asList("dropchance", "minAmount", "maxAmount", "enchantLevel");
+
+	private static boolean loadedMobConfigFile = false;
+
+	public static void attemptLoadMobConfigFile() {
+		if (loadedMobConfigFile) {
+			return;
 		}
-		else {
-			String configcontent = new String(Files.readAllBytes(Paths.get(dirpath + File.separator + "mobdropconfig.txt", new String[0])), StandardCharsets.UTF_8);
-			for (String line : configcontent.split("\n")) {
-				if (line.trim().endsWith(",")) {
-					line = line.trim();
-					line = line.substring(0, line.length() - 1).trim();
-				}
-				
-				if (line.length() < 5) {
-					continue;
-				}
-				
-				if (!line.contains("' : '")) {
-					continue;
-				}
-				
-				String[] linespl = line.split("' : '");
-				if (linespl.length < 2) {
-					continue;
-				}
-				
-				String entityrl = linespl[0].substring(1).trim();
-				String itemstring = linespl[1].trim();
-				itemstring = itemstring.substring(0, itemstring.length() - 1).trim();
-				
-				EntityType<?> entitytype = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(entityrl));
-				if (entitytype == null) {
-					continue;
-				}
-				
-				CopyOnWriteArrayList<ItemStack> thedrops = new CopyOnWriteArrayList<ItemStack>(); 
-				if (itemstring.length() > 3) {
-					for (String itemdata : itemstring.split(StringFunctions.escapeSpecialRegexChars("|||"))) {
-						ItemStack itemstack = null;
-						try {
-							CompoundTag newnbt = TagParser.parseTag(itemdata);
-							itemstack = ItemStack.of(newnbt);
-						} catch (CommandSyntaxException ignored) { }
-						
-						if (itemstack != null) {
-							thedrops.add(itemstack.copy());
-						}
+
+		try {
+			loadMobConfigFile();
+		} catch (Exception ex) {
+			Constants.logger.warn("[" + Reference.NAME + "] Error on loading the entity config file. The mod has been disabled.");
+		}
+
+		loadedMobConfigFile = true;
+	}
+
+	@SuppressWarnings("deprecation")
+	public static void loadMobConfigFile() throws IOException {
+		mobdrops = new HashMap<>();
+
+		String configContent = "";
+		if (file.isFile()) {
+			configContent = Files.readString(file.toPath());
+		}
+
+		for (String line : configContent.split("\n")) {
+			if (line.trim().endsWith(",")) {
+				line = line.trim();
+				line = line.substring(0, line.length() - 1).trim();
+			}
+
+			if (line.length() < 5) {
+				continue;
+			}
+
+			if (!line.contains("' : '")) {
+				continue;
+			}
+
+			String[] lineSplit = line.split("' : '");
+			if (lineSplit.length < 2) {
+				continue;
+			}
+
+			String entityId = lineSplit[0].substring(1).trim();
+			String itemString = lineSplit[1].trim();
+			itemString = itemString.substring(0, itemString.length() - 1).trim();
+
+			Optional<EntityType<?>> optionalEntityType = BuiltInRegistries.ENTITY_TYPE.getOptional(new ResourceLocation(entityId));
+			if (optionalEntityType.isEmpty()) {
+				continue;
+			}
+
+			CopyOnWriteArrayList<ItemStack> drops = new CopyOnWriteArrayList<>();
+			if (itemString.length() > 3) {
+				for (String itemData : itemString.split(StringFunctions.escapeSpecialRegexChars("|||"))) {
+					ItemStack itemStack = ItemStack.EMPTY;
+					try {
+						CompoundTag itemTag = TagParser.parseTag(itemData);
+						itemStack = ItemStack.of(itemTag);
+					} catch (CommandSyntaxException ignored) { }
+
+					if (!itemStack.isEmpty()) {
+						drops.add(itemStack.copy());
 					}
 				}
-				
-				mobdrops.put(entitytype, thedrops);
 			}
+
+			mobdrops.put(optionalEntityType.get(), drops);
 		}
-		
-		if (writer != null) {
-			for (ResourceLocation rl : BuiltInRegistries.ENTITY_TYPE.keySet()) {
-				EntityType<?> entitytype = BuiltInRegistries.ENTITY_TYPE.get(rl);
-				MobCategory classification = entitytype.getCategory();
-				if (!classification.equals(MobCategory.MISC) || specialmiscmobs.contains(entitytype)) {
-					writer.println("'" + rl.toString() + "'" + " : '',");
-					
-					mobdrops.put(entitytype, new CopyOnWriteArrayList<ItemStack>());
-				}
-			}
-			
-			writer.close();
-		}
+
+		addMissingEntityTypesToFile(configContent);
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	private static void addMissingEntityTypesToFile(String configContent) throws IOException {
+		List<String> missingEntityLines = new ArrayList<>();
+
+		for (ResourceLocation rl : BuiltInRegistries.ENTITY_TYPE.keySet()) {
+			EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(rl);
+			if (isConfigurableEntityType(entityType) && !mobdrops.containsKey(entityType)) {
+				missingEntityLines.add("'" + rl + "'" + " : '',");
+
+				mobdrops.put(entityType, new CopyOnWriteArrayList<>());
+			}
+		}
+
+		if (missingEntityLines.isEmpty()) {
+			return;
+		}
+
+		boolean ignored = dir.mkdirs();
+		PrintWriter writer = new PrintWriter(new FileWriter(file, StandardCharsets.UTF_8, true));
+		if (!configContent.isEmpty() && !configContent.endsWith("\n")) {
+			writer.println();
+		}
+
+		for (String missingEntityLine : missingEntityLines) {
+			writer.println(missingEntityLine);
+		}
+
+		writer.close();
+	}
+
+	public static boolean isConfigurableEntityType(EntityType<?> entityType) {
+		return !entityType.getCategory().equals(MobCategory.MISC) || specialmiscmobs.contains(entityType);
+	}
+
+	public static CompoundTag getDropSettings(ItemStack extraDrop) {
+		CompoundTag dropSettings = new CompoundTag();
+		CompoundTag itemTag = extraDrop.getTag();
+		if (itemTag == null) {
+			return dropSettings;
+		}
+
+		for (String dropSettingKey : dropSettingKeys) {
+			Tag dropSetting = itemTag.get(dropSettingKey);
+			if (dropSetting != null) {
+				dropSettings.put(dropSettingKey, dropSetting);
+			}
+		}
+
+		return dropSettings;
+	}
+
+	public static ItemStack withoutDropSettings(ItemStack extraDrop) {
+		ItemStack itemStack = extraDrop.copy();
+		for (String dropSettingKey : dropSettingKeys) {
+			itemStack.removeTagKey(dropSettingKey);
+		}
+
+		return itemStack;
+	}
+
+	public static List<ItemStack> getDropsThatPassTheirChance(List<ItemStack> extraDrops) {
+		List<ItemStack> passedDrops = new ArrayList<>();
+		for (ItemStack extraDrop : extraDrops) {
+			if (passesDropChance(getDropSettings(extraDrop))) {
+				passedDrops.add(extraDrop);
+			}
+		}
+
+		return passedDrops;
+	}
+
+	public static List<ItemStack> pickOneAtRandom(List<ItemStack> drops) {
+		if (drops.size() <= 1) {
+			return drops;
+		}
+
+		return List.of(drops.get(GlobalVariables.random.nextInt(drops.size())));
+	}
+
+	public static boolean passesDropChance(CompoundTag dropSettings) {
+		if (!dropSettings.contains("dropchance")) {
+			return true;
+		}
+
+		double dropChance = dropSettings.getDouble("dropchance");
+		if (dropChance >= 1.0) {
+			return true;
+		}
+
+		return GlobalVariables.random.nextDouble() <= dropChance;
+	}
+
+	public static List<ItemStack> getDropStacks(Level level, ItemStack extraDrop) {
+		CompoundTag dropSettings = getDropSettings(extraDrop);
+		ItemStack itemStack = withoutDropSettings(extraDrop);
+		int dropAmount = getDropAmount(itemStack, dropSettings);
+		List<ItemStack> dropStacks = new ArrayList<>();
+
+		if (dropSettings.contains("enchantLevel")) {
+			int enchantLevel = dropSettings.getInt("enchantLevel");
+			for (int i = 0; i < dropAmount; i++) {
+				dropStacks.add(getEnchantedItem(level, itemStack.copyWithCount(1), enchantLevel));
+			}
+
+			return dropStacks;
+		}
+
+		int amountLeft = dropAmount;
+		while (amountLeft > 0) {
+			int stackCount = Math.min(amountLeft, itemStack.getMaxStackSize());
+			dropStacks.add(itemStack.copyWithCount(stackCount));
+			amountLeft -= stackCount;
+		}
+
+		return dropStacks;
+	}
+
+	public static int getDropAmount(ItemStack itemStack, CompoundTag dropSettings) {
+		if (!dropSettings.contains("minAmount") || !dropSettings.contains("maxAmount")) {
+			return itemStack.getCount();
+		}
+
+		int minAmount = dropSettings.getInt("minAmount");
+		int maxAmount = dropSettings.getInt("maxAmount");
+		if (maxAmount <= minAmount) {
+			return minAmount;
+		}
+
+		return minAmount + GlobalVariables.random.nextInt(maxAmount - minAmount + 1);
+	}
+
+	public static ItemStack getEnchantedItem(Level level, ItemStack itemStack, int enchantLevel) {
+		return EnchantmentHelper.enchantItem(level.getRandom(), itemStack, enchantLevel, false);
+	}
+
+	public static String getAmountText(ItemStack itemStack, CompoundTag dropSettings) {
+		if (!dropSettings.contains("minAmount") || !dropSettings.contains("maxAmount")) {
+			return String.valueOf(itemStack.getCount());
+		}
+
+		return dropSettings.getInt("minAmount") + "-" + dropSettings.getInt("maxAmount");
+	}
+
+	@SuppressWarnings("deprecation")
 	public static boolean writeDropsMapToFile() throws IOException {
 		if (!dir.isDirectory() || !file.isFile()) {
 			dir.mkdirs();
 		}
-		
+
 		PrintWriter writer = new PrintWriter(dirpath + File.separator + "mobdropconfig.txt", StandardCharsets.UTF_8);
-		
+
 		for (ResourceLocation rl : BuiltInRegistries.ENTITY_TYPE.keySet()) {
 			EntityType<?> entitytype = BuiltInRegistries.ENTITY_TYPE.get(rl);
-			MobCategory classification = entitytype.getCategory();
-			if (!classification.equals(MobCategory.MISC) || specialmiscmobs.contains(entitytype)) {
+			if (isConfigurableEntityType(entitytype)) {
 				StringBuilder itemdata = new StringBuilder();
 				if (mobdrops.containsKey(entitytype)) {
 					CopyOnWriteArrayList<ItemStack> drops = mobdrops.get(entitytype);
@@ -122,20 +270,20 @@ public class Util {
 							if (!itemdata.toString().equals("")) {
 								itemdata.append("|||");
 							}
-							
+
 							CompoundTag nbt = new CompoundTag();
 							nbt = drop.save(nbt);
 							String nbtstring = nbt.toString();
-							
+
 							itemdata.append(nbtstring);
 						}
 					}
 				}
-				
+
 				writer.println("'" + rl.toString() + "'" + " : '" + itemdata + "',");
 			}
 		}
-		
+
 		writer.close();
 		return true;
 	}

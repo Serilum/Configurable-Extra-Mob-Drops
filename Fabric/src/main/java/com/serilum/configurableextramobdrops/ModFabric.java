@@ -6,9 +6,11 @@ import com.natamus.collective.fabric.callbacks.CollectiveEntityEvents;
 import com.serilum.configurableextramobdrops.cmd.CommandCemd;
 import com.serilum.configurableextramobdrops.events.MobDropEvent;
 import com.serilum.configurableextramobdrops.util.Reference;
-import com.serilum.configurableextramobdrops.util.Util;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -30,12 +32,9 @@ public class ModFabric implements ModInitializer {
 	}
 
 	private void loadEvents() {
-		try {
-			Util.loadMobConfigFile();
-		} catch (Exception ex) {
-			System.out.println("[" + Reference.NAME + "] Error on loading the entity config file. The mod has been disabled.");
-			return;
-		}
+		ServerWorldEvents.LOAD.register((MinecraftServer server, ServerLevel level) -> {
+			MobDropEvent.onWorldLoad(level);
+		});
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			CommandCemd.register(dispatcher);

@@ -1,12 +1,12 @@
 package com.serilum.configurableextramobdrops.events;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.natamus.collective.data.GlobalVariables;
+import com.serilum.configurableextramobdrops.config.ConfigHandler;
 import com.serilum.configurableextramobdrops.util.Util;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -15,47 +15,33 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public class MobDropEvent {
-	public static void mobItemDrop(Level world, Entity entity, DamageSource damageSource) {
-		if (world.isClientSide) {
+	public static void onWorldLoad(Level level) {
+		Util.attemptLoadMobConfigFile();
+	}
+
+	public static void mobItemDrop(Level level, Entity entity, DamageSource damageSource) {
+		if (level.isClientSide) {
 			return;
 		}
-		
-		EntityType<?> entitytype = entity.getType();
-		if (!Util.mobdrops.containsKey(entitytype)) {
+
+		EntityType<?> entityType = entity.getType();
+		if (!Util.mobdrops.containsKey(entityType)) {
 			return;
 		}
-		
-		CopyOnWriteArrayList<ItemStack> extradrops = Util.mobdrops.get(entitytype);
-		if (extradrops.size() > 0) {
-			BlockPos epos = entity.blockPosition();
-			
-			for (ItemStack itemstack : extradrops) {
-				ItemStack newstack = itemstack.copy();
-				CompoundTag tag = newstack.getOrCreateTag();
-				
-				CompoundTag nbt = new CompoundTag();
-				newstack.save(nbt);
-				
-				
-				if (tag.contains("dropchance")) {
-					double dropchance = tag.getDouble("dropchance");
-					if (dropchance != 1.0) {
-						double chanceroll = GlobalVariables.random.nextDouble();
-						if (chanceroll > dropchance) {
-							continue;
-						}
-					}
-					tag.remove("dropchance");
-					if (tag.size() == 0) {
-						nbt.remove("tag");
-						newstack = ItemStack.of(nbt);
-					}
-					else {
-						newstack.setTag(tag);
-					}
+
+		CopyOnWriteArrayList<ItemStack> extraDrops = Util.mobdrops.get(entityType);
+		if (!extraDrops.isEmpty()) {
+			BlockPos ePos = entity.blockPosition();
+
+			List<ItemStack> passedDrops = Util.getDropsThatPassTheirChance(extraDrops);
+			if (ConfigHandler.onlyOneRandomDrop) {
+				passedDrops = Util.pickOneAtRandom(passedDrops);
+			}
+
+			for (ItemStack passedDrop : passedDrops) {
+				for (ItemStack dropStack : Util.getDropStacks(level, passedDrop)) {
+					level.addFreshEntity(new ItemEntity(level, ePos.getX(), ePos.getY()+1, ePos.getZ(), dropStack));
 				}
-				
-				world.addFreshEntity(new ItemEntity(world, epos.getX(), epos.getY()+1, epos.getZ(), newstack.copy()));
 			}
 		}
 	}
