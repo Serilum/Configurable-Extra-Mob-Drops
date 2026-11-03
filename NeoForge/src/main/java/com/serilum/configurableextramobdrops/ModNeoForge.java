@@ -2,9 +2,11 @@ package com.serilum.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
 import com.natamus.collective.check.ShouldLoadCheck;
+import com.serilum.configurableextramobdrops.neoforge.config.IntegrateNeoForgeConfig;
 import com.serilum.configurableextramobdrops.neoforge.events.NeoForgeMobDropEvent;
 import com.serilum.configurableextramobdrops.util.Reference;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -21,6 +23,8 @@ public class ModNeoForge {
 
 		setGlobalConstants();
 		ModCommon.init();
+
+		IntegrateNeoForgeConfig.registerScreen(ModLoadingContext.get());
 
 		RegisterMod.register(Reference.NAME, Reference.MOD_ID, Reference.VERSION, Reference.ACCEPTED_VERSIONS);
 	}

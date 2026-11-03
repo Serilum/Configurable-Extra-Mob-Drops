@@ -2,6 +2,7 @@ package com.serilum.configurableextramobdrops;
 
 import com.natamus.collective.check.RegisterMod;
 import com.natamus.collective.check.ShouldLoadCheck;
+import com.serilum.configurableextramobdrops.forge.config.IntegrateForgeConfig;
 import com.serilum.configurableextramobdrops.forge.events.ForgeMobDropEvent;
 import com.serilum.configurableextramobdrops.util.Reference;
 import net.minecraftforge.eventbus.api.bus.BusGroup;
@@ -22,6 +23,8 @@ public class ModForge {
 
 		setGlobalConstants();
 		ModCommon.init();
+
+		IntegrateForgeConfig.registerScreen(modLoadingContext);
 
 		RegisterMod.register(Reference.NAME, Reference.MOD_ID, Reference.VERSION, Reference.ACCEPTED_VERSIONS);
 	}
