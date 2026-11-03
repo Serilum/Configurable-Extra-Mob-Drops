@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "configurableextramobdrops",
-  "version": "3.8",
+  "version": "4.0",
 
   "name": "Configurable Extra Mob Drops",
   "description": "Add extra drops to any (modded) mob entity via commands and a config file.",
@@ -16,14 +16,14 @@
   "icon": "icon.png",
 
   "environment": "*",
-  "entrypoints": { "main": [ "com.serilum.configurableextramobdrops.ModFabric" ] },
+  "entrypoints": { "main": [ "com.serilum.configurableextramobdrops.ModFabric" ], "modmenu": [ "com.serilum.configurableextramobdrops.fabric.config.IntegrateModMenu" ] },
 
   "depends": {
     "fabricloader": ">=0.18.0",
     "fabric-api": "*",
     "minecraft": ">=26.1",
     "java": ">=25",
-    "collective": ">=8.67"
+    "collective": ">=8.76"
   },
 
   "custom": {
@@ -41,7 +41,6 @@
 	  "If you would like to contribute too, check out https://serilum.com/donate",
 	  " ",
 	  "Membership sponsors:",
-	  " AnyankaT",
 	  " aternosorg",
 	  " Cherriesaurus",
 	  " Linda Jansen",
