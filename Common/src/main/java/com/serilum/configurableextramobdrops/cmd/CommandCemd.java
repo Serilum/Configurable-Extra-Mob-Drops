@@ -3,6 +3,7 @@ import com.serilum.configurableextramobdrops.util.Reference;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -96,21 +97,18 @@ public class CommandCemd {
 			}))
 			.then(Commands.literal("addhand")
 			.then(Commands.argument("entity-name", StringArgumentType.word())
-			.executes((command) -> processAddhand(command, 1.0))))
-			.then(Commands.literal("addhand")
-			.then(Commands.argument("entity-name", StringArgumentType.word())
+			.executes((command) -> processAddhand(command, 1.0, new CompoundTag()))
 			.then(Commands.argument("drop-chance", DoubleArgumentType.doubleArg())
+			.executes((command) -> processAddhand(command, DoubleArgumentType.getDouble(command, "drop-chance"), new CompoundTag()))
+			.then(Commands.argument("min-amount", IntegerArgumentType.integer(0, 64))
+			.then(Commands.argument("max-amount", IntegerArgumentType.integer(0, 64))
+			.executes((command) -> processAddhand(command, DoubleArgumentType.getDouble(command, "drop-chance"), getAmountSettings(command)))
+			.then(Commands.argument("enchant-level", IntegerArgumentType.integer(1, 50))
 			.executes((command) -> {
-				CommandSourceStack source = command.getSource();
-
-				double chance = DoubleArgumentType.getDouble(command, "drop-chance");
-				if (chance < 0 || chance > 1.0) {
-					MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.chancebetween0", ChatFormatting.RED);
-					return 0;
-				}
-
-				return processAddhand(command, chance);
-			}))))
+				CompoundTag dropSettings = getAmountSettings(command);
+				dropSettings.putInt("enchantLevel", IntegerArgumentType.getInteger(command, "enchant-level"));
+				return processAddhand(command, DoubleArgumentType.getDouble(command, "drop-chance"), dropSettings);
+			})))))))
 			.then(Commands.literal("cleardrops")
 			.then(Commands.argument("entity-name", StringArgumentType.word())
 			.executes((command) -> {
@@ -165,8 +163,25 @@ public class CommandCemd {
 		);
 	}
 
-	private static int processAddhand(CommandContext<CommandSourceStack> command, double dropChance) {
+	private static CompoundTag getAmountSettings(CommandContext<CommandSourceStack> command) {
+		CompoundTag dropSettings = new CompoundTag();
+		dropSettings.putInt("minAmount", IntegerArgumentType.getInteger(command, "min-amount"));
+		dropSettings.putInt("maxAmount", IntegerArgumentType.getInteger(command, "max-amount"));
+		return dropSettings;
+	}
+
+	private static int processAddhand(CommandContext<CommandSourceStack> command, double dropChance, CompoundTag dropSettings) {
 		CommandSourceStack source = command.getSource();
+
+		if (dropChance < 0 || dropChance > 1.0) {
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.chancebetween0", ChatFormatting.RED);
+			return 0;
+		}
+
+		if (dropSettings.contains("minAmount") && dropSettings.getInt("minAmount") > dropSettings.getInt("maxAmount")) {
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.minamounthigher", ChatFormatting.RED);
+			return 0;
+		}
 
 		Player player;
 		try {
@@ -218,11 +233,12 @@ public class CommandCemd {
 
 		Level level = player.level();
 
-		CompoundTag compoundTag = new CompoundTag();
-		compoundTag.putDouble("dropChance", dropChance);
+		dropSettings.putDouble("dropChance", dropChance);
 
 		ItemStack toAddStack = hand.copy();
-		toAddStack.set(DataComponents.CUSTOM_DATA, CustomData.of(compoundTag));
+		CompoundTag customTag = toAddStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+		customTag.merge(dropSettings);
+		toAddStack.set(DataComponents.CUSTOM_DATA, CustomData.of(customTag));
 
 		Util.mobdrops.get(entitytype).add(toAddStack);
 
@@ -234,24 +250,23 @@ public class CommandCemd {
 			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.somethingwentwrongwhilewriting", ChatFormatting.RED);
 		}
 
-		MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.successfullyaddeddrop", ChatFormatting.DARK_GREEN, toAddStack.getCount(), toAddStack.getHoverName().getString().toLowerCase(), entitytype.getDescription().getString(), dropChance);
+		MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.successfullyaddeddrop", ChatFormatting.DARK_GREEN, Util.getAmountText(toAddStack, dropSettings), toAddStack.getHoverName().getString().toLowerCase(), entitytype.getDescription().getString(), dropChance);
+		if (dropSettings.contains("enchantLevel")) {
+			MessageFunctions.sendTranslatableMessage(source, "collective.configurableextramobdrops.message.enchantedeachdrop", ChatFormatting.DARK_GREEN, dropSettings.getInt("enchantLevel"));
+		}
 		return 1;
 	}
-	
+
 	private static void showUsage(CommandSourceStack source) {
-		MessageFunctions.sendTranslatableMessage(source, "collective.shared.message.usage", true, ChatFormatting.DARK_GREEN, Reference.NAME);
-		MessageFunctions.sendMessage(source, " /cemd usage", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.shared.message.showmessage", ChatFormatting.DARK_GRAY);
-		MessageFunctions.sendMessage(source, " /cemd list", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.listsavailableentities", ChatFormatting.DARK_GRAY);
-		MessageFunctions.sendMessage(source, " /cemd reload", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.shared.message.reloadsconfigfile", ChatFormatting.DARK_GRAY);
-		MessageFunctions.sendMessage(source, " /cemd addhand <entity-name>", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.addhandentitydrops", ChatFormatting.DARK_GRAY);
-		MessageFunctions.sendMessage(source, " /cemd addhand <entity-name> <drop-chance>", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.addhandentitydropsdrop", ChatFormatting.DARK_GRAY);
-		MessageFunctions.sendMessage(source, " /cemd cleardrops <entity-name>", ChatFormatting.DARK_GREEN);
-		MessageFunctions.sendTranslatableMessage(source, "  ", "collective.configurableextramobdrops.message.clearsdropsspecified", ChatFormatting.DARK_GRAY);
+		MessageFunctions.sendCommandUsageHeader(source, Reference.NAME);
+		MessageFunctions.sendCommandUsageLine(source, "cemd usage", "collective.shared.message.showmessage");
+		MessageFunctions.sendCommandUsageLine(source, "cemd list", "collective.configurableextramobdrops.message.listsavailableentities");
+		MessageFunctions.sendCommandUsageLine(source, "cemd reload", "collective.shared.message.reloadsconfigfile");
+		MessageFunctions.sendCommandUsageLine(source, "cemd addhand <entity-name>", "collective.configurableextramobdrops.message.addhandentitydrops");
+		MessageFunctions.sendCommandUsageLine(source, "cemd addhand <entity-name> <drop-chance>", "collective.configurableextramobdrops.message.addhandentitydropsdrop");
+		MessageFunctions.sendCommandUsageLine(source, "cemd addhand <entity-name> <drop-chance> <min-amount> <max-amount>", "collective.configurableextramobdrops.message.addhandentitydropsamount");
+		MessageFunctions.sendCommandUsageLine(source, "cemd addhand <entity-name> <drop-chance> <min-amount> <max-amount> <enchant-level>", "collective.configurableextramobdrops.message.addhandentitydropsenchant");
+		MessageFunctions.sendCommandUsageLine(source, "cemd cleardrops <entity-name>", "collective.configurableextramobdrops.message.clearsdropsspecified");
 	}
 	
 	private static void showList(CommandSourceStack source) {

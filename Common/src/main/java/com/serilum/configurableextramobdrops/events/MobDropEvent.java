@@ -1,18 +1,16 @@
 package com.serilum.configurableextramobdrops.events;
 
-import com.natamus.collective.data.GlobalVariables;
+import com.serilum.configurableextramobdrops.config.ConfigHandler;
 import com.serilum.configurableextramobdrops.util.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MobDropEvent {
@@ -34,36 +32,15 @@ public class MobDropEvent {
 		if (!extradrops.isEmpty()) {
 			BlockPos ePos = entity.blockPosition();
 
-			for (ItemStack extraDropStack : extradrops) {
-				ItemStack newStack = extraDropStack.copy();
+			List<ItemStack> passedDrops = Util.getDropsThatPassTheirChance(extradrops);
+			if (ConfigHandler.onlyOneRandomDrop) {
+				passedDrops = Util.pickOneAtRandom(passedDrops);
+			}
 
-				if (newStack.has(DataComponents.CUSTOM_DATA)) {
-					CustomData customData = newStack.get(DataComponents.CUSTOM_DATA);
-					if (customData == null) {
-						continue;
-					}
-
-					CompoundTag compoundTag = customData.copyTag();
-					if (compoundTag.contains("dropChance")) {
-						double dropChance = compoundTag.getDouble("dropChance");
-						if (dropChance != 1.0) {
-							double chanceroll = GlobalVariables.random.nextDouble();
-							if (chanceroll > dropChance) {
-								continue;
-							}
-						}
-
-						if (compoundTag.size() == 1) {
-							newStack.remove(DataComponents.CUSTOM_DATA);
-						}
-						else {
-							compoundTag.remove("dropChance");
-							newStack.set(DataComponents.CUSTOM_DATA, CustomData.of(compoundTag));
-						}
-					}
+			for (ItemStack passedDrop : passedDrops) {
+				for (ItemStack dropStack : Util.getDropStacks(level, passedDrop)) {
+					level.addFreshEntity(new ItemEntity(level, ePos.getX(), ePos.getY()+1, ePos.getZ(), dropStack));
 				}
-
-				level.addFreshEntity(new ItemEntity(level, ePos.getX(), ePos.getY()+1, ePos.getZ(), newStack));
 			}
 		}
 	}
