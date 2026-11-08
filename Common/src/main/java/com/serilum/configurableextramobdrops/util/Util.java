@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -42,6 +43,32 @@ public class Util {
 	private static final List<String> dropSettingKeys = Arrays.asList("dropChance", "minAmount", "maxAmount", "enchantLevel");
 
 	private static boolean loadedMobConfigFile = false;
+
+	public static String readMobDropConfig() {
+		try {
+			return Files.readString(file.toPath());
+		}
+		catch (IOException ignored) {
+			return "";
+		}
+	}
+
+	public static void writeMobDropConfig(MinecraftServer server, String text) {
+		try {
+			PrintWriter writer = new PrintWriter(file, StandardCharsets.UTF_8);
+			writer.print(text);
+			writer.close();
+		}
+		catch (IOException ignored) {
+			Constants.logger.warn("[" + Reference.NAME + "] Unable to write the entity config file.");
+			return;
+		}
+
+		loadedMobConfigFile = false;
+		if (server != null) {
+			attemptLoadMobConfigFile(server.overworld());
+		}
+	}
 
 	public static void attemptLoadMobConfigFile(Level level) {
 		if (loadedMobConfigFile) {
