@@ -6,7 +6,7 @@ iconFile="icon.png"
 
 [[mods]]
 modId="configurableextramobdrops"
-version="4.0"
+version="4.1"
 displayName="Configurable Extra Mob Drops"
 displayURL="https://serilum.com/mod/configurable-extra-mob-drops"
 authors="Serilum"
@@ -22,7 +22,7 @@ If you would like to contribute too, check out https://serilum.com/donate Apprec
 [[dependencies.configurableextramobdrops]]
     modId="collective"
     type="required"
-    versionRange="[8.76,)"
+    versionRange="[8.84,)"
     ordering="NONE"
     side="BOTH"
 
